@@ -106,14 +106,14 @@ class FaceDetection:
         right_eye_coordinates = self.right_eye()
 
         left_eye_corner_1 = (
-            left_eye_coordinates[0].x, left_eye_coordinates[0].y)
+            left_eye_coordinates[0].x, left_eye_coordinates[0].y, left_eye_coordinates[0].z)
         left_eye_corner_2 = (
-            left_eye_coordinates[3].x, left_eye_coordinates[3].y)
+            left_eye_coordinates[3].x, left_eye_coordinates[3].y, left_eye_coordinates[3].z)
 
         right_eye_corner_1 = (
-            right_eye_coordinates[0].x, right_eye_coordinates[0].y)
+            right_eye_coordinates[0].x, right_eye_coordinates[0].y, right_eye_coordinates[0].z)
         right_eye_corner_2 = (
-            right_eye_coordinates[3].x, right_eye_coordinates[3].y)
+            right_eye_coordinates[3].x, right_eye_coordinates[3].y, right_eye_coordinates[3].z)
 
         left_width = math.dist(left_eye_corner_1, left_eye_corner_2)
         right_width = math.dist(right_eye_corner_1, right_eye_corner_2)
@@ -202,47 +202,15 @@ class FaceDetection:
         left_dist_cm = face_distance * left_dist / self.focal_length
         right_dist_cm = face_distance * right_dist / self.focal_length
 
-        print(left_dist_cm, right_dist_cm)
+        left_wide = left_dist_cm >= 0.025
+        left_regular = left_dist_cm >= 0.017
+        left_narrow = left_dist_cm >= 0.010
 
-        left_wide = left_dist > 0.028
-        left_regular = left_dist > 0.021
-        left_narrow = left_dist > 0.013
-
-        right_wide = right_dist > 0.028
-        right_regular = right_dist > 0.021
-        right_narrow = right_dist > 0.013
+        right_wide = right_dist_cm >= 0.025
+        right_regular = right_dist_cm >= 0.017
+        right_narrow = right_dist_cm >= 0.010
 
         return ((left_wide, left_regular, left_narrow), (right_wide, right_regular, right_narrow))
-
-        # wide - 0.028800321441962533 0.03316043677383287
-        # reg - 0.021750694301137827 0.022537449040658693
-        # min thes hardly open - 0.013763145468421601 0.014974651007565273
-
-        # left_pupil = self.left_iris()[0]
-        # right_pupil = self.right_iris()[0]
-
-        # left_pupil_center = (left_pupil.x, left_pupil.y)
-        # right_pupil_center = (right_pupil.x, right_pupil.y)
-
-        # left_eye = self.left_eye()[1]
-        # right_eye = self.right_eye()[1]
-
-        # # use x position from pupil to measure only the vertical distance
-        # left_eye_center_bottom = (left_pupil.x, left_eye.y)
-        # right_eye_center_bottom = (right_pupil.x, right_eye.y)
-
-        # left_dist = math.dist(left_eye_center_bottom, left_pupil_center)
-        # right_dist = math.dist(right_eye_center_bottom, right_pupil_center)
-
-        # avg_height, left_height, right_height = self.height_of_eyes()
-
-        # left_position = 100 * left_dist/left_height - 50
-        # right_position = 100 * right_dist/right_height - 50
-
-        # height_average = (left_dist + right_dist) / 2
-        # avg_position = 100 * height_average/avg_height - 50
-
-        # return (clamp_percentage_range(avg_position), clamp_percentage_range(left_position), clamp_percentage_range(right_position))
 
     def yaw(self):
         if not self.is_face_detected():
@@ -283,20 +251,15 @@ class FaceDetection:
         left_eye = self.left_eye()
         right_eye = self.right_eye()
 
-        left_eye_center_bottom = (left_eye[1].x, left_eye[1].y)
-        left_eye_center_top = (left_eye[2].x, left_eye[2].y)
+        left_eye_center_bottom = (left_eye[1].x, left_eye[1].y, left_eye[1].z)
+        left_eye_center_top = (left_eye[2].x, left_eye[2].y, left_eye[2].z)
 
-        right_eye_center_bottom = (right_eye[1].x, right_eye[1].y)
-        right_eye_center_top = (right_eye[2].x, right_eye[2].y)
+        right_eye_center_bottom = (
+            right_eye[1].x, right_eye[1].y, right_eye[1].z)
+        right_eye_center_top = (right_eye[2].x, right_eye[2].y, right_eye[2].z)
 
         left_dist = math.dist(left_eye_center_bottom, left_eye_center_top)
         right_dist = math.dist(right_eye_center_bottom, right_eye_center_top)
-
-        # wide - 0.02950322556982262 0.03756985870719184
-        # reg - 0.023732858485531624 0.022621709646834725
-        # min thes hardly open - 0.006759203167983996 0.00514646188922433
-        # closed - 0.0022369833415452844 0.0031016126020026583
-        # print(left_dist, right_dist)
 
         return (left_dist > 0.007 or right_dist > 0.007, left_dist > 0.007, right_dist > 0.007)
 
@@ -304,34 +267,53 @@ class FaceDetection:
         yaw = self.yaw() * 100 * 1.25
         pitch = self.pitch() * 100
 
+        yaw_threshold = 37
+        pitch_up_threshold = -43
+        pitch_down_threshold = 30
+
         eyelid_any_open, eyelid_left_open, eyelid_right_open = self.is_eyelid_open()
-        if (abs(yaw) < 37 and not eyelid_any_open):
-            return False
-        elif (yaw <= -37 and not eyelid_right_open):
-            return False
-        elif (yaw >= 37 and not eyelid_left_open):
-            return False
 
         _, left_iris_x, right_iris_x = self.horizontal_position_of_iris_in_eye()
         left_iris_y_state, right_iris_y_state = self.vertical_position_of_iris_in_eye()
 
         iris_x = right_iris_x if (yaw < 0) else left_iris_x
-        iris_y_state = left_iris_y_state if (yaw < 0) else left_iris_y_state
-        print(f"{iris_y_state}")
-        # -43 - 30
-        gaze_x_angle = yaw + iris_x - 50
+        iris_y_state = right_iris_y_state if (yaw < 0) else left_iris_y_state
+
+        gaze_x = yaw + iris_x - 50
         face_distance = self.distance_from_camera()
 
-        attention_angle_x = math.degrees(math.atan(25/face_distance))
+        max_attention_angle_x = math.degrees(math.atan(25/face_distance))
 
         print(f'yaw {yaw},',
               f'pitch {pitch},',
               f'iris pos {iris_x - 50},',
-              f'gaze x angle {gaze_x_angle},',
+              f'gaze x {gaze_x},',
               f'face dist {face_distance},',
-              f'max x ang {attention_angle_x}')
+              f'max x ang {max_attention_angle_x}',
+              f'iris y {iris_y_state}')
 
-        return abs(gaze_x_angle) < attention_angle_x
+        if (abs(yaw) < yaw_threshold and not eyelid_any_open):
+            return (False, "eyes closed")
+        elif (yaw <= -yaw_threshold and not eyelid_right_open):
+            return (False, "looking right & left eye closed")
+        elif (yaw >= yaw_threshold and not eyelid_left_open):
+            return (False, "looking left & right eye closed")
+
+        if (pitch < pitch_up_threshold):
+            return (False, 'looking up 1')
+        elif (pitch > pitch_down_threshold):
+            return (False, 'looking down 1')
+        elif (pitch >= 10 and pitch <= pitch_down_threshold and not iris_y_state[0]):
+            return (False, 'looking down 2')
+        elif (pitch >= pitch_up_threshold and pitch <= 0 and iris_y_state[0] and abs(yaw) < 50):
+            return (False, 'looking up 2')
+
+        if (abs(iris_x) >= 40 and abs(yaw) >= 50 and abs(yaw) <= 100):
+            return (True, '')
+
+        angle_match = abs(gaze_x) < max_attention_angle_x
+
+        return (angle_match, '')
 
 
 def calculate_angle(a1, a2, b1, b2):

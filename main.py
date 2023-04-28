@@ -33,10 +33,11 @@ while True:
         # face bottom
         output.add_points(face.silhouette_bottom(), rgb_color=(0, 0, 255))
 
-        if face.is_in_attention_range():
+        in_attention, reason = face.is_in_attention_range()
+        if in_attention:
             output.add_text("paying attention", (0, 255, 255))
         else:
-            output.add_text("not paying attention", (255, 255, 0))
+            output.add_text(f"no attention - {reason}", (255, 255, 0))
 
         # print(f'h {face.horizontal_position_of_iris_in_eye()}',
         #       f'v {face.vertical_position_of_iris_in_eye()}')
