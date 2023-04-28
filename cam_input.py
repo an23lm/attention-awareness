@@ -4,7 +4,6 @@ import cv2
 class CameraInput:
     def __init__(self):
         self.camera = cv2.VideoCapture(0)
-        print(self.camera)
 
     def get_frames(self):
         _, frame = self.camera.read()

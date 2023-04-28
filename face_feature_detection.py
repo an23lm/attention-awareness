@@ -1,5 +1,6 @@
 import mediapipe as mp
 import math
+import logging
 
 
 class FaceDetection:
@@ -284,13 +285,14 @@ class FaceDetection:
 
         max_attention_angle_x = math.degrees(math.atan(25/face_distance))
 
-        print(f'yaw {yaw},',
-              f'pitch {pitch},',
-              f'iris pos {iris_x - 50},',
-              f'gaze x {gaze_x},',
-              f'face dist {face_distance},',
-              f'max x ang {max_attention_angle_x}',
-              f'iris y {iris_y_state}')
+        logging.debug(
+            f'yaw {yaw},\
+            pitch {pitch},\
+            iris pos {iris_x - 50},\
+            gaze x {gaze_x},\
+            face dist {face_distance},\
+            max x ang {max_attention_angle_x},\
+            iris y {iris_y_state}')
 
         if (abs(yaw) < yaw_threshold and not eyelid_any_open):
             return (False, "eyes closed")

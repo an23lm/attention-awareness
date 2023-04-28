@@ -49,8 +49,6 @@ with mp_face_mesh.FaceMesh(
             eye_aspect_ratio = eye_distance / \
                 ((image.shape[0] + image.shape[1]) / 2)
 
-            print(eye_aspect_ratio)
-
             # Determine if the user is looking at the screen based on the eye aspect ratio
             if eye_aspect_ratio > 0.3:
                 cv2.putText(image, "Looking at screen", (50, 50),
